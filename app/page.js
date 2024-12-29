@@ -2,10 +2,10 @@ import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 
 export default async function Home() {
-  // Fetch quizzes from Supabase, including the user's name
+  // Fetch quizzes from Supabase, including the user's name using a foreign table join
   const { data: quizzes, error } = await supabase
     .from('quizzes')
-    .select('id, title, user_id, users(name)'); // Fetch name instead of email
+    .select('id, title, user_id, created_at, users:id')  // Fetch quiz details and user name from auth.users
 
   if (error) {
     return <div className="text-red-500">Error loading quizzes: {error.message}</div>;

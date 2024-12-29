@@ -6,11 +6,11 @@ import { NextResponse } from 'next/server'; // Import NextResponse for the new A
 export async function POST(req) {
   try {
     // Parse request body
-    const { name, email, password } = await req.json(); // Assuming the data comes from the request body
+    const { email, password } = await req.json(); // Only get email and password from the request body
 
     // Validate input (optional but good for robustness)
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     // Example Supabase user creation logic
@@ -23,8 +23,8 @@ export async function POST(req) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Insert the user data into the "users" table
-    await supabase.from('users').insert([{ name, email, user_id: data.user.id }]);
+    // Insert the user data into the "users" table without the "name"
+    await supabase.from('users').insert([{ email, user_id: data.user.id }]);
 
     return NextResponse.json({ message: 'User created successfully' }, { status: 200 });
   } catch (error) {
