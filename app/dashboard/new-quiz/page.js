@@ -18,10 +18,10 @@ export default function NewQuiz() {
   const handleSave = async (e) => {
     e.preventDefault();
 
-    // Get the current user's ID from Supabase
-    const { data: { user } } = await supabase.auth.getSession();
-    if (!user) {
-      console.error('User not authenticated');
+    // Get the current user's session and ID from Supabase
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session || !session.user) {
+      console.error('User not authenticated or session error');
       return;
     }
 
@@ -29,7 +29,7 @@ export default function NewQuiz() {
       title: quizData.title,
       author: quizData.author,
       questions: quizData.questions,
-      user_id: user.id, // Include the user ID
+      user_id: session.user.id, // Include the user ID from the session
     };
 
     try {
