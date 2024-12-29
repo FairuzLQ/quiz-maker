@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';  // To use the router for navigation
 
 export default function Register() {
   // State to toggle password visibility
@@ -23,6 +24,11 @@ export default function Register() {
 
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const router = useRouter();  // Using the router to redirect after success
 
   // Set `isClient` to true on the client side
   useEffect(() => {
@@ -92,7 +98,14 @@ export default function Register() {
 
         if (response.ok) {
           console.log('User registered successfully:', data);
-          // Redirect or display success message
+
+          // Show the modal and set a timer to redirect
+          setModalVisible(true);
+
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            router.push('/login');
+          }, 3000);
         } else {
           setErrors((prevErrors) => ({
             ...prevErrors,
@@ -208,6 +221,22 @@ export default function Register() {
             </Link>
           </p>
         </div>
+
+        {/* Modal for successful registration */}
+        {modalVisible && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg text-center shadow-lg w-80">
+              <h3 className="text-xl font-semibold mb-4">Registration Successful</h3>
+              <p className="text-sm text-gray-600 mb-4">Please check your email and confirm your registration.</p>
+              <button
+                onClick={() => router.push('/login')}
+                className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
