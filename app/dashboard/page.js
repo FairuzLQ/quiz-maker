@@ -2,13 +2,26 @@
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faClock, faRightFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
+  const router = useRouter();
+
   const quizzes = [
     { id: 1, title: 'JavaScript Basics', date: '2024-12-01' },
     { id: 2, title: 'React Fundamentals', date: '2024-12-10' },
     { id: 3, title: 'CSS Grid and Flexbox', date: '2024-12-20' },
   ]; // Sample data for now
+
+  // Navigate to the new quiz page
+  const handleAddQuiz = () => {
+    router.push('/dashboard/new-quiz');
+  };
+
+  // Navigate to the edit quiz page
+  const handleEditQuiz = (quizId) => {
+    router.push(`/quiz/${quizId}`);
+  };
 
   return (
     <div className="min-h-screen flex bg-white">
@@ -46,7 +59,10 @@ export default function Dashboard() {
         <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-800">My Quizzes</h1>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            <button
+              onClick={handleAddQuiz}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
               + Add New Quiz
             </button>
           </div>
@@ -67,7 +83,10 @@ export default function Dashboard() {
                       <td className="px-4 py-2 border">{quiz.date}</td>
                       <td className="px-4 py-2 border">
                         <div className="flex items-center space-x-2">
-                          <button className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                          <button
+                            onClick={() => handleEditQuiz(quiz.id)}
+                            className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                          >
                             <FontAwesomeIcon icon={faEdit} />
                           </button>
                           <button className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
