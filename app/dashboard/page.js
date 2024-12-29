@@ -1,11 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faClock, faRightFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@lib/supabase';
 
 export default function Dashboard() {
   const router = useRouter();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const quizzes = [
     { id: 1, title: 'JavaScript Basics', date: '2024-12-01', takers: 150, avgScore: 85 },
@@ -21,6 +24,21 @@ export default function Dashboard() {
   // Navigate to the edit quiz page
   const handleEditQuiz = (quizId) => {
     router.push(`/quiz/${quizId}`);
+  };
+
+  // Handle logout functionality
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout Error:', error.message);
+        return;
+      }
+      setShowLogoutModal(false);
+      router.push('./auth/login'); // Redirect to login page after logout
+    } catch (error) {
+      console.error('Unexpected Logout Error:', error);
+    }
   };
 
   return (
@@ -45,7 +63,10 @@ export default function Dashboard() {
               </button>
             </li>
             <li className="mb-4">
-              <button className="flex items-center w-full px-4 py-2 hover:bg-blue-700">
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="flex items-center w-full px-4 py-2 hover:bg-blue-700"
+              >
                 <FontAwesomeIcon icon={faRightFromBracket} className="h-6 w-6 mr-3" />
                 Logout
               </button>
@@ -115,6 +136,30 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-md shadow-md text-center">
+            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
+            <p className="text-gray-600 mb-6">Are you sure you want to log out?</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Yes, Logout
+              </button>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

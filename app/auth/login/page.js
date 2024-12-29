@@ -1,30 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@lib/supabase';
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
-
   const [errors, setErrors] = useState({
     email: '',
-    password: ''
+    password: '',
   });
-
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false); // For toggling password visibility
   const [modalOpen, setModalOpen] = useState(false); // For modal visibility
   const router = useRouter();
 
+  useEffect(() => {
+    // Check if the user is already logged in
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('../dashboard'); // Redirect to dashboard if session exists
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [id]: value
+      [id]: value,
     }));
   };
 
@@ -34,7 +45,7 @@ export default function Login() {
     // Reset errors
     setErrors({
       email: '',
-      password: ''
+      password: '',
     });
 
     let isValid = true;
@@ -43,7 +54,7 @@ export default function Login() {
     if (!formData.email.includes('@')) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        email: 'Please enter a valid email'
+        email: 'Please enter a valid email',
       }));
       isValid = false;
     }
@@ -52,39 +63,31 @@ export default function Login() {
     if (formData.password.length < 8) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        password: 'Password must be at least 8 characters'
+        password: 'Password must be at least 8 characters',
       }));
       isValid = false;
     }
 
     if (isValid) {
       setLoading(true);
+
       try {
-        const response = await fetch('../api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-          }),
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
         });
 
-        const data = await response.json(); // Parse JSON response
-
-        if (response.ok) {
-          console.log('User logged in successfully:', data);
-          // Show modal and redirect after 2 seconds
-          setModalOpen(true);
-          setTimeout(() => {
-            router.push('../dashboard'); // Redirect user to the dashboard or homepage
-          }, 2000); // Adjust the duration of the modal
-        } else {
+        if (error) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            email: data.message || 'Login failed',
+            email: error.message || 'Login failed',
           }));
+        } else if (data.session) {
+          // Show modal and redirect to dashboard
+          setModalOpen(true);
+          setTimeout(() => {
+            router.push('../dashboard');
+          }, 2000); // Adjust the modal duration as needed
         }
       } catch (error) {
         console.error('Error during login:', error);
@@ -144,18 +147,15 @@ export default function Login() {
             </div>
             {errors.password && <p className="text-red-500 text-sm mt-2">{errors.password}</p>}
           </div>
-          <div className="flex items-center justify-between mb-6">
-            <button
-              type="submit"
-              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={loading}
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
-
-        <div className="text-center">
+        <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link href="./register" className="text-blue-600 hover:text-blue-700 font-semibold">
