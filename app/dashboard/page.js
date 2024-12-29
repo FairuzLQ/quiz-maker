@@ -8,9 +8,9 @@ export default function Dashboard() {
   const router = useRouter();
 
   const quizzes = [
-    { id: 1, title: 'JavaScript Basics', date: '2024-12-01' },
-    { id: 2, title: 'React Fundamentals', date: '2024-12-10' },
-    { id: 3, title: 'CSS Grid and Flexbox', date: '2024-12-20' },
+    { id: 1, title: 'JavaScript Basics', date: '2024-12-01', takers: 150, avgScore: 85 },
+    { id: 2, title: 'React Fundamentals', date: '2024-12-10', takers: 200, avgScore: 90 },
+    { id: 3, title: 'CSS Grid and Flexbox', date: '2024-12-20', takers: 120, avgScore: 78 },
   ]; // Sample data for now
 
   // Navigate to the new quiz page
@@ -72,6 +72,8 @@ export default function Dashboard() {
                 <tr className="bg-gray-200 text-left">
                   <th className="px-4 py-2 border">Title</th>
                   <th className="px-4 py-2 border">Date</th>
+                  <th className="px-4 py-2 border">Takers</th>
+                  <th className="px-4 py-2 border">Avg Score</th>
                   <th className="px-4 py-2 border">Actions</th>
                 </tr>
               </thead>
@@ -81,6 +83,8 @@ export default function Dashboard() {
                     <tr key={quiz.id} className="hover:bg-gray-100">
                       <td className="px-4 py-2 border">{quiz.title}</td>
                       <td className="px-4 py-2 border">{quiz.date}</td>
+                      <td className="px-4 py-2 border">{quiz.takers}</td>
+                      <td className="px-4 py-2 border">{quiz.avgScore}%</td>
                       <td className="px-4 py-2 border">
                         <div className="flex items-center space-x-2">
                           <button
@@ -99,7 +103,7 @@ export default function Dashboard() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="3"
+                      colSpan="5"
                       className="px-4 py-2 border text-center text-gray-500"
                     >
                       No quizzes found. Click "Add New Quiz" to create one.

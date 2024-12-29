@@ -1,11 +1,12 @@
+// Home component (unchanged)
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 
 export default async function Home() {
-  // Fetch quizzes from Supabase, including the user's name using a foreign table join
+  // Fetch quizzes from Supabase, including the user's ID
   const { data: quizzes, error } = await supabase
     .from('quizzes')
-    .select('id, title, user_id, created_at, users:id')  // Fetch quiz details and user name from auth.users
+    .select('id, title, user_id, created_at');
 
   if (error) {
     return <div className="text-red-500">Error loading quizzes: {error.message}</div>;
@@ -23,7 +24,7 @@ export default async function Home() {
             <Link href={`/quiz/${quiz.id}`} className="text-2xl font-semibold text-blue-600 hover:text-blue-800">
               {quiz.title}
             </Link>
-            <p className="text-sm text-gray-500 mt-2">Created by: {quiz.users?.name || 'Unknown'}</p>
+            <p className="text-sm text-gray-500 mt-2">Created by: User ID {quiz.user_id}</p>
           </div>
         ))}
       </div>
