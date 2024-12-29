@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiTrash2 } from 'react-icons/fi'; // Icon for deleting questions
 import { BiPlus } from 'react-icons/bi'; // Icon for adding a question
+import { supabase } from '@lib/supabase'; // Import Supabase client
 
 export default function NewQuiz() {
   const [quizData, setQuizData] = useState({
@@ -14,13 +15,42 @@ export default function NewQuiz() {
 
   const router = useRouter();
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    // Here, you can implement API calls to save the quiz data
-    console.log('Creating new quiz:', quizData);
 
-    // After saving, redirect to the dashboard
-    router.push('/dashboard');
+    // Get the current user's ID from Supabase
+    const { data: { user } } = await supabase.auth.getSession();
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    const quizPayload = {
+      title: quizData.title,
+      author: quizData.author,
+      questions: quizData.questions,
+      user_id: user.id, // Include the user ID
+    };
+
+    try {
+      // Send the quiz data to the API route
+      const response = await fetch('/api/quizzez/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(quizPayload),
+      });
+
+      if (response.ok) {
+        // After saving, redirect to the dashboard
+        router.push('/dashboard');
+      } else {
+        console.error('Failed to create quiz');
+      }
+    } catch (error) {
+      console.error('Error creating quiz:', error);
+    }
   };
 
   const handleAddQuestion = () => {

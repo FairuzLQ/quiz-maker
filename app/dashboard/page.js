@@ -1,20 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faClock, faRightFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@lib/supabase';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faClock, faRightFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 export default function Dashboard() {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const quizzes = [
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // Track authentication state
+  const [quizzes, setQuizzes] = useState([
     { id: 1, title: 'JavaScript Basics', date: '2024-12-01', takers: 150, avgScore: 85 },
     { id: 2, title: 'React Fundamentals', date: '2024-12-10', takers: 200, avgScore: 90 },
     { id: 3, title: 'CSS Grid and Flexbox', date: '2024-12-20', takers: 120, avgScore: 78 },
-  ]; // Sample data for now
+  ]); // Sample data for now
+
+  // Check if the user is logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('./auth/login'); // Redirect to login page if not authenticated
+      } else {
+        setIsAuthenticated(true); // Set authenticated state
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   // Navigate to the new quiz page
   const handleAddQuiz = () => {
@@ -40,6 +54,15 @@ export default function Dashboard() {
       console.error('Unexpected Logout Error:', error);
     }
   };
+
+  // Render loading state while checking authentication
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-white">
