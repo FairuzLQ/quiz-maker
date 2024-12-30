@@ -161,7 +161,7 @@ export default function Dashboard() {
                   quizzes.map((quiz) => (
                     <tr key={quiz.id} className="hover:bg-gray-100">
                       <td className="px-4 py-2 border">{quiz.title}</td>
-                      <td className="px-4 py-2 border">{quiz.date}</td>
+                      <td className="px-4 py-2 border">{new Date(quiz.created_at).toLocaleDateString()}</td>
                       <td className="px-4 py-2 border">{quiz.takers}</td>
                       <td className="px-4 py-2 border">{quiz.avgScore}%</td>
                       <td className="px-4 py-2 border">
