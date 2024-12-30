@@ -10,11 +10,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Track authentication state
-  const [quizzes, setQuizzes] = useState([
-    { id: 1, title: 'JavaScript Basics', date: '2024-12-01', takers: 150, avgScore: 85 },
-    { id: 2, title: 'React Fundamentals', date: '2024-12-10', takers: 200, avgScore: 90 },
-    { id: 3, title: 'CSS Grid and Flexbox', date: '2024-12-20', takers: 120, avgScore: 78 },
-  ]); // Sample data for now
+  const [quizzes, setQuizzes] = useState([]); // Store quizzes dynamically
 
   // Check if the user is logged in
   useEffect(() => {
@@ -24,6 +20,45 @@ export default function Dashboard() {
         router.push('./auth/login'); // Redirect to login page if not authenticated
       } else {
         setIsAuthenticated(true); // Set authenticated state
+
+        // Fetch quizzes created by the logged-in user
+        const { data: quizzesData, error: quizError } = await supabase
+          .from('quizzes') // Assuming 'quizzes' is the table where quiz data is stored
+          .select('*')
+          .eq('user_id', session.user.id); // Filter quizzes by the logged-in user's ID
+
+        if (quizError) {
+          console.error('Error fetching quizzes:', quizError.message);
+        } else {
+          // For each quiz, fetch the number of takers and average score
+          const quizzesWithDetails = await Promise.all(
+            quizzesData.map(async (quiz) => {
+              // Fetch the taker count
+              const { count: takerCount } = await supabase
+                .from('quiz_results') // Assuming 'quiz_results' stores user answers and scores
+                .select('id', { count: 'exact' })
+                .eq('quiz_id', quiz.id);
+
+              // Calculate the average score for the quiz
+              const { data: scores } = await supabase
+                .from('quiz_results')
+                .select('score')
+                .eq('quiz_id', quiz.id);
+
+              const avgScore = scores.length > 0 ? (
+                scores.reduce((acc, curr) => acc + curr.score, 0) / scores.length
+              ) : 0;
+
+              return {
+                ...quiz,
+                takers: takerCount,
+                avgScore: avgScore.toFixed(2), // Format the average score to 2 decimal places
+              };
+            })
+          );
+
+          setQuizzes(quizzesWithDetails); // Set the quizzes state with detailed information
+        }
       }
     };
 
