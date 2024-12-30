@@ -90,6 +90,31 @@ export default function Dashboard() {
     }
   };
 
+  // Handle quiz deletion
+  const handleDeleteQuiz = async (quizId) => {
+    try {
+      const response = await fetch('/api/quizzez/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quizId }), // Pass the quiz ID in the request body
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Remove the deleted quiz from the local state
+        setQuizzes((prevQuizzes) => prevQuizzes.filter((quiz) => quiz.id !== quizId));
+        console.log(data.message); // Log success message
+      } else {
+        console.error(data.error); // Log error message if any
+      }
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+    }
+  };
+
   // Render loading state while checking authentication
   if (isAuthenticated === null) {
     return (
@@ -168,11 +193,14 @@ export default function Dashboard() {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => handleEditQuiz(quiz.id)}
-                            className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                            className="px-2 py-1 bg-green-600 text-white rounded-md hover:bg-green-700"
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </button>
-                          <button className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                          <button
+                            onClick={() => handleDeleteQuiz(quiz.id)}
+                            className="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                          >
                             <FontAwesomeIcon icon={faTrash} />
                           </button>
                         </div>
@@ -181,12 +209,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="px-4 py-2 border text-center text-gray-500"
-                    >
-                      No quizzes found. Click "Add New Quiz" to create one.
-                    </td>
+                    <td colSpan="5" className="px-4 py-2 text-center">No quizzes available</td>
                   </tr>
                 )}
               </tbody>
@@ -197,22 +220,21 @@ export default function Dashboard() {
 
       {/* Logout Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-md shadow-md text-center">
-            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
-            <p className="text-gray-600 mb-6">Are you sure you want to log out?</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Yes, Logout
-              </button>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-xl mb-4">Are you sure you want to log out?</h2>
+            <div className="flex space-x-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-300 rounded-md"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Logout
               </button>
             </div>
           </div>
