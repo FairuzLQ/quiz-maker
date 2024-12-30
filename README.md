@@ -18,7 +18,7 @@ This app is built using the following technologies:
    First, clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/fairuzlq/quiz-maker.git
+   git clone https://github.com/FairuzLQ/quiz-maker.git
 
 2. **Clone the Repository**
 
