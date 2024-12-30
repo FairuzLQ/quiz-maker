@@ -1,8 +1,10 @@
 import { supabase } from '@lib/supabase';
 import Link from 'next/link';
 
+export const revalidate = 0; // Disable caching, fetch fresh data on every request
+
 export default async function Home() {
-  // Fetch quizzes from Supabase, including the user's ID
+  // Fetch quizzes from Supabase
   const { data: quizzes, error } = await supabase
     .from('quizzes')
     .select('id, title, author, user_id, created_at');
