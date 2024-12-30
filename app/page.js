@@ -1,4 +1,3 @@
-// Home component (unchanged)
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 
@@ -6,11 +5,17 @@ export default async function Home() {
   // Fetch quizzes from Supabase, including the user's ID
   const { data: quizzes, error } = await supabase
     .from('quizzes')
-    .select('id, title, user_id, created_at');
+    .select('id, title, author, user_id, created_at');
 
   if (error) {
     return <div className="text-red-500">Error loading quizzes: {error.message}</div>;
   }
+
+  // Function to format dates
+  const formatDate = (isoDate) => {
+    const date = new Date(isoDate);
+    return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -24,7 +29,8 @@ export default async function Home() {
             <Link href={`/quiz/${quiz.id}`} className="text-2xl font-semibold text-blue-600 hover:text-blue-800">
               {quiz.title}
             </Link>
-            <p className="text-sm text-gray-500 mt-2">Created by: User ID {quiz.user_id}</p>
+            <p className="text-sm text-gray-500 mt-2">Created by: {quiz.author}</p>
+            <p className="text-sm text-gray-500">Created on: {formatDate(quiz.created_at)}</p>
           </div>
         ))}
       </div>
