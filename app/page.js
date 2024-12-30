@@ -20,19 +20,24 @@ export default async function Home() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-4xl font-extrabold text-center mb-8">All Quizzes</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="container mx-auto px-4 py-10">
+      <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800 tracking-wide">
+        Discover Quizzes
+      </h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {quizzes.map((quiz) => (
           <div
             key={quiz.id}
-            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300"
+            className="bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 p-6 rounded-lg shadow-lg hover:scale-105 transform transition duration-300 ease-in-out"
           >
-            <Link href={`/quiz/${quiz.id}`} className="text-2xl font-semibold text-blue-600 hover:text-blue-800">
+            <Link
+              href={`/quiz/${quiz.id}`}
+              className="text-2xl font-semibold text-white hover:text-gray-100"
+            >
               {quiz.title}
             </Link>
-            <p className="text-sm text-gray-500 mt-2">Created by: {quiz.author}</p>
-            <p className="text-sm text-gray-500">Created on: {formatDate(quiz.created_at)}</p>
+            <p className="text-sm text-gray-100 mt-2">Created by: {quiz.author}</p>
+            <p className="text-sm text-gray-100">Created on: {formatDate(quiz.created_at)}</p>
           </div>
         ))}
       </div>

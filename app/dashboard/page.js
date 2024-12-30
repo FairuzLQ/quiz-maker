@@ -9,37 +9,31 @@ import { faUser, faClock, faRightFromBracket, faEdit, faTrash } from '@fortaweso
 export default function Dashboard() {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // Track authentication state
-  const [quizzes, setQuizzes] = useState([]); // Store quizzes dynamically
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [quizzes, setQuizzes] = useState([]);
 
-  // Check if the user is logged in
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push('./auth/login'); // Redirect to login page if not authenticated
+        router.push('./auth/login');
       } else {
-        setIsAuthenticated(true); // Set authenticated state
-
-        // Fetch quizzes created by the logged-in user
-        const { data: quizzesData, error: quizError } = await supabase
-          .from('quizzes') // Assuming 'quizzes' is the table where quiz data is stored
+        setIsAuthenticated(true);
+        const { data: quizzesData, error } = await supabase
+          .from('quizzes')
           .select('*')
-          .eq('user_id', session.user.id); // Filter quizzes by the logged-in user's ID
+          .eq('user_id', session.user.id);
 
-        if (quizError) {
-          console.error('Error fetching quizzes:', quizError.message);
+        if (error) {
+          console.error('Error fetching quizzes:', error.message);
         } else {
-          // For each quiz, fetch the number of takers and average score
           const quizzesWithDetails = await Promise.all(
             quizzesData.map(async (quiz) => {
-              // Fetch the taker count
               const { count: takerCount } = await supabase
-                .from('quiz_results') // Assuming 'quiz_results' stores user answers and scores
+                .from('quiz_results')
                 .select('id', { count: 'exact' })
                 .eq('quiz_id', quiz.id);
 
-              // Calculate the average score for the quiz
               const { data: scores } = await supabase
                 .from('quiz_results')
                 .select('score')
@@ -52,12 +46,12 @@ export default function Dashboard() {
               return {
                 ...quiz,
                 takers: takerCount,
-                avgScore: avgScore.toFixed(2), // Format the average score to 2 decimal places
+                avgScore: avgScore.toFixed(2),
               };
             })
           );
 
-          setQuizzes(quizzesWithDetails); // Set the quizzes state with detailed information
+          setQuizzes(quizzesWithDetails);
         }
       }
     };
@@ -65,102 +59,81 @@ export default function Dashboard() {
     checkAuth();
   }, [router]);
 
-  // Navigate to the new quiz page
   const handleAddQuiz = () => {
     router.push('/dashboard/new-quiz');
   };
 
-  // Navigate to the edit quiz page
   const handleEditQuiz = (quizId) => {
     router.push(`/dashboard/quiz/${quizId}`);
   };
 
-  // Handle logout functionality
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout Error:', error.message);
-        return;
+      if (!error) {
+        setShowLogoutModal(false);
+        router.push('./auth/login');
       }
-      setShowLogoutModal(false);
-      router.push('./auth/login'); // Redirect to login page after logout
     } catch (error) {
       console.error('Unexpected Logout Error:', error);
     }
   };
 
-  // Handle quiz deletion
   const handleDeleteQuiz = async (quizId) => {
     try {
       const response = await fetch('/api/quizzez/delete', {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quizId }), // Pass the quiz ID in the request body
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId }),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        // Remove the deleted quiz from the local state
         setQuizzes((prevQuizzes) => prevQuizzes.filter((quiz) => quiz.id !== quizId));
-        console.log(data.message); // Log success message
       } else {
-        console.error(data.error); // Log error message if any
+        console.error('Error deleting quiz');
       }
     } catch (error) {
       console.error('Error deleting quiz:', error);
     }
   };
 
-  // Render loading state while checking authentication
   if (isAuthenticated === null) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-100">
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-600 text-white">
+      <aside className="w-full lg:w-64 bg-blue-600 text-white flex-shrink-0">
         <div className="p-6">
           <h1 className="text-2xl font-bold">Quiz-Maker</h1>
         </div>
-        <nav className="mt-6">
-          <ul>
-            <li className="mb-4">
-              <button className="flex items-center w-full px-4 py-2 hover:bg-blue-700">
-                <FontAwesomeIcon icon={faUser} className="h-6 w-6 mr-3" />
-                Profile
-              </button>
-            </li>
-            <li className="mb-4">
-              <button className="flex items-center w-full px-4 py-2 hover:bg-blue-700">
-                <FontAwesomeIcon icon={faClock} className="h-6 w-6 mr-3" />
-                Quiz History
-              </button>
-            </li>
-            <li className="mb-4">
-              <button
-                onClick={() => setShowLogoutModal(true)}
-                className="flex items-center w-full px-4 py-2 hover:bg-blue-700"
-              >
-                <FontAwesomeIcon icon={faRightFromBracket} className="h-6 w-6 mr-3" />
-                Logout
-              </button>
-            </li>
-          </ul>
+        <nav className="mt-6 space-y-2 px-4">
+          <button className="flex items-center w-full py-2 hover:bg-blue-700 rounded-md px-3">
+            <FontAwesomeIcon icon={faUser} className="h-5 w-5 mr-3" />
+            Profile
+          </button>
+          <button className="flex items-center w-full py-2 hover:bg-blue-700 rounded-md px-3">
+            <FontAwesomeIcon icon={faClock} className="h-5 w-5 mr-3" />
+            Quiz History
+          </button>
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className="flex items-center w-full py-2 hover:bg-blue-700 rounded-md px-3"
+          >
+            <FontAwesomeIcon icon={faRightFromBracket} className="h-5 w-5 mr-3" />
+            Logout
+          </button>
         </nav>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">
-        <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+      <main className="flex-1 p-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-800">My Quizzes</h1>
             <button
@@ -171,9 +144,9 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full table-auto border-collapse">
+            <table className="min-w-full table-auto border-collapse">
               <thead>
-                <tr className="bg-gray-200 text-left">
+                <tr className="bg-gray-200">
                   <th className="px-4 py-2 border">Title</th>
                   <th className="px-4 py-2 border">Date</th>
                   <th className="px-4 py-2 border">Takers</th>
@@ -190,16 +163,16 @@ export default function Dashboard() {
                       <td className="px-4 py-2 border">{quiz.takers}</td>
                       <td className="px-4 py-2 border">{quiz.avgScore}%</td>
                       <td className="px-4 py-2 border">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex space-x-2">
                           <button
                             onClick={() => handleEditQuiz(quiz.id)}
-                            className="px-2 py-1 bg-green-600 text-white rounded-md hover:bg-green-700"
+                            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </button>
                           <button
                             onClick={() => handleDeleteQuiz(quiz.id)}
-                            className="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </button>
@@ -216,23 +189,23 @@ export default function Dashboard() {
             </table>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Logout Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
-            <h2 className="text-xl mb-4">Are you sure you want to log out?</h2>
-            <div className="flex space-x-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-4">Confirm Logout</h2>
+            <div className="flex justify-between">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded-md"
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Logout
               </button>

@@ -12,16 +12,18 @@ export default function NewQuiz() {
     author: '',
     questions: [],
   });
+  const [isSaving, setIsSaving] = useState(false); // State for managing the modal visibility
 
   const router = useRouter();
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setIsSaving(true); // Show modal
 
-    // Get the current user's session and ID from Supabase
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session || !session.user) {
       console.error('User not authenticated or session error');
+      setIsSaving(false); // Hide modal on error
       return;
     }
 
@@ -33,7 +35,7 @@ export default function NewQuiz() {
         options: q.options,
         answer: q.options[q.correctAnswer],
       })),
-      user_id: session.user.id, // Include the user ID from the session
+      user_id: session.user.id,
     };
 
     try {
@@ -52,6 +54,8 @@ export default function NewQuiz() {
       }
     } catch (error) {
       console.error('Error creating quiz:', error);
+    } finally {
+      setIsSaving(false); // Hide modal
     }
   };
 
@@ -61,10 +65,10 @@ export default function NewQuiz() {
       questions: [
         ...quizData.questions,
         {
-          id: Date.now(), // Unique ID based on timestamp
+          id: Date.now(),
           question: '',
-          options: ['', '', '', ''], // Default options
-          correctAnswer: 0, // Default correct answer index
+          options: ['', '', '', ''],
+          correctAnswer: 0,
         },
       ],
     });
@@ -115,112 +119,121 @@ export default function NewQuiz() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Create New Quiz</h1>
-      <form onSubmit={handleSave}>
-        {/* Quiz Title */}
-        <div className="mb-4">
-          <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
-          <input
-            type="text"
-            value={quizData.title}
-            onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
-            placeholder="Enter quiz title"
-            className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-          />
-        </div>
+    <div className="relative">
+      {/* Main Form */}
+      <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Create New Quiz</h1>
+        <form onSubmit={handleSave}>
+          <div className="mb-4">
+            <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
+            <input
+              type="text"
+              value={quizData.title}
+              onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
+              placeholder="Enter quiz title"
+              className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
 
-        {/* Author Name */}
-        <div className="mb-6">
-          <label className="block text-lg font-medium text-gray-700">Author Name</label>
-          <input
-            type="text"
-            value={quizData.author}
-            onChange={(e) => setQuizData({ ...quizData, author: e.target.value })}
-            placeholder="Enter author name"
-            className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-          />
-        </div>
+          <div className="mb-6">
+            <label className="block text-lg font-medium text-gray-700">Author Name</label>
+            <input
+              type="text"
+              value={quizData.author}
+              onChange={(e) => setQuizData({ ...quizData, author: e.target.value })}
+              placeholder="Enter author name"
+              className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
 
-        {/* Questions Section */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
-          {quizData.questions.map((question) => (
-            <div key={question.id} className="mb-6 border p-4 rounded-lg shadow-sm">
-              <div className="mb-4">
-                <label className="block text-lg font-medium text-gray-700">Question</label>
-                <input
-                  type="text"
-                  name="question"
-                  value={question.question}
-                  onChange={(e) => handleChangeQuestion(e, question.id)}
-                  placeholder="Enter the question"
-                  className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-
-              {question.options.map((option, index) => (
-                <div key={index} className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">
-                    Option {index + 1}
-                  </label>
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
+            {quizData.questions.map((question) => (
+              <div key={question.id} className="mb-6 border p-4 rounded-lg shadow-sm">
+                <div className="mb-4">
+                  <label className="block text-lg font-medium text-gray-700">Question</label>
                   <input
                     type="text"
-                    value={option}
-                    onChange={(e) => handleChangeOption(e, question.id, index)}
-                    placeholder={`Option ${index + 1}`}
+                    name="question"
+                    value={question.question}
+                    onChange={(e) => handleChangeQuestion(e, question.id)}
+                    placeholder="Enter the question"
                     className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                   />
                 </div>
-              ))}
 
-              <div className="mb-4">
-                <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
-                <select
-                  value={question.correctAnswer}
-                  onChange={(e) => handleCorrectAnswerChange(e, question.id)}
-                  className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                {question.options.map((option, index) => (
+                  <div key={index} className="mb-4">
+                    <label className="block text-lg font-medium text-gray-700">
+                      Option {index + 1}
+                    </label>
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) => handleChangeOption(e, question.id, index)}
+                      placeholder={`Option ${index + 1}`}
+                      className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      required
+                    />
+                  </div>
+                ))}
+
+                <div className="mb-4">
+                  <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
+                  <select
+                    value={question.correctAnswer}
+                    onChange={(e) => handleCorrectAnswerChange(e, question.id)}
+                    className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {question.options.map((option, index) => (
+                      <option key={index} value={index}>
+                        {option || `Option ${index + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveQuestion(question.id)}
+                  className="text-red-500 hover:text-red-700 flex items-center space-x-2"
                 >
-                  {question.options.map((option, index) => (
-                    <option key={index} value={index}>
-                      {option || `Option ${index + 1}`}
-                    </option>
-                  ))}
-                </select>
+                  <FiTrash2 className="text-xl" />
+                  <span>Remove Question</span>
+                </button>
               </div>
+            ))}
+          </div>
 
-              <button
-                type="button"
-                onClick={() => handleRemoveQuestion(question.id)}
-                className="text-red-500 hover:text-red-700 flex items-center space-x-2"
-              >
-                <FiTrash2 className="text-xl" />
-                <span>Remove Question</span>
-              </button>
-            </div>
-          ))}
+          <button
+            type="button"
+            onClick={handleAddQuestion}
+            className="bg-blue-500 text-white p-3 rounded-lg mb-4 flex items-center space-x-2 hover:bg-blue-700"
+          >
+            <BiPlus className="text-xl" />
+            <span>Add Question</span>
+          </button>
+
+          <button
+            type="submit"
+            className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
+          >
+            Save Quiz
+          </button>
+        </form>
+      </div>
+
+      {/* Modal */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-lg font-semibold text-gray-800">Saving your quiz...</p>
+          </div>
         </div>
-
-        <button
-          type="button"
-          onClick={handleAddQuestion}
-          className="bg-blue-500 text-white p-3 rounded-lg mb-4 flex items-center space-x-2 hover:bg-blue-700"
-        >
-          <BiPlus className="text-xl" />
-          <span>Add Question</span>
-        </button>
-
-        <button
-          type="submit"
-          className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
-        >
-          Save Quiz
-        </button>
-      </form>
+      )}
     </div>
   );
 }

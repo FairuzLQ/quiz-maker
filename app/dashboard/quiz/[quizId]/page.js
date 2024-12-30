@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -11,6 +11,7 @@ export default function EditQuiz() {
   const { quizId } = useParams();
   const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // State for managing the modal visibility
 
   useEffect(() => {
     if (!quizId) return;
@@ -49,6 +50,8 @@ export default function EditQuiz() {
       return;
     }
 
+    setIsSaving(true); // Show modal
+
     const formattedQuestions = quizData.questions.map((q) => ({
       question: q.question,
       options: q.options,
@@ -70,6 +73,7 @@ export default function EditQuiz() {
       if (!response.ok) {
         const errorData = await response.json();
         alert(errorData.error || 'Failed to update quiz.');
+        setIsSaving(false); // Hide modal on error
         return;
       }
 
@@ -78,6 +82,8 @@ export default function EditQuiz() {
     } catch (error) {
       console.error('Error saving quiz:', error);
       alert('An error occurred while saving. Please try again.');
+    } finally {
+      setIsSaving(false); // Hide modal
     }
   };
 
@@ -147,91 +153,102 @@ export default function EditQuiz() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Edit Quiz</h1>
-      <form onSubmit={handleSave}>
-        <div className="mb-4">
-          <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
-          <input
-            type="text"
-            value={quizData.title}
-            onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
-            className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div className="mb-6">
-          <label className="block text-lg font-medium text-gray-700">Author Name</label>
-          <input
-            type="text"
-            value={quizData.author}
-            onChange={(e) => setQuizData({ ...quizData, author: e.target.value })}
-            className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
-          {quizData.questions.map((question, index) => (
-            <div key={question.id || index} className="mb-6 border p-4 rounded-lg shadow-sm">
-              <div className="mb-4">
-                <label className="block text-lg font-medium text-gray-700">Question</label>
-                <input
-                  type="text"
-                  value={question.question}
-                  onChange={(e) => handleChangeQuestion(e, index)}
-                  className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              {question.options.map((option, idx) => (
-                <div key={idx} className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">Option {idx + 1}</label>
+    <div className="relative">
+      <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Edit Quiz</h1>
+        <form onSubmit={handleSave}>
+          <div className="mb-4">
+            <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
+            <input
+              type="text"
+              value={quizData.title}
+              onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
+              className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-lg font-medium text-gray-700">Author Name</label>
+            <input
+              type="text"
+              value={quizData.author}
+              onChange={(e) => setQuizData({ ...quizData, author: e.target.value })}
+              className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
+            {quizData.questions.map((question, index) => (
+              <div key={question.id || index} className="mb-6 border p-4 rounded-lg shadow-sm">
+                <div className="mb-4">
+                  <label className="block text-lg font-medium text-gray-700">Question</label>
                   <input
                     type="text"
-                    value={option}
-                    onChange={(e) => handleChangeOption(e, index, idx)}
+                    value={question.question}
+                    onChange={(e) => handleChangeQuestion(e, index)}
                     className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
                   />
                 </div>
-              ))}
-              <div className="mb-4">
-                <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
-                <select
-                  value={question.correctAnswer ?? 0}
-                  onChange={(e) => handleCorrectAnswerChange(e, index)}
-                  className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
+                {question.options.map((option, idx) => (
+                  <div key={idx} className="mb-4">
+                    <label className="block text-lg font-medium text-gray-700">Option {idx + 1}</label>
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) => handleChangeOption(e, index, idx)}
+                      className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                ))}
+                <div className="mb-4">
+                  <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
+                  <select
+                    value={question.correctAnswer ?? 0}
+                    onChange={(e) => handleCorrectAnswerChange(e, index)}
+                    className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
+                  >
+                    {question.options.map((option, idx) => (
+                      <option key={idx} value={idx}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveQuestion(question.id || index)}
+                  className="text-red-500 hover:text-red-700 flex items-center"
                 >
-                  {question.options.map((option, idx) => (
-                    <option key={idx} value={idx}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  <FiTrash2 className="mr-2" />
+                  Remove Question
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => handleRemoveQuestion(question.id || index)}
-                className="text-red-500 hover:text-red-700 flex items-center"
-              >
-                <FiTrash2 className="mr-2" />
-                Remove Question
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleAddQuestion}
+            className="bg-blue-500 text-white p-3 rounded-lg mb-4 flex items-center hover:bg-blue-700"
+          >
+            <BiPlus className="mr-2" />
+            Add Question
+          </button>
+          <button
+            type="submit"
+            className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
+          >
+            Save Quiz
+          </button>
+        </form>
+      </div>
+
+      {/* Modal */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-lg font-semibold text-gray-800">Saving your quiz...</p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={handleAddQuestion}
-          className="bg-blue-500 text-white p-3 rounded-lg mb-4 flex items-center hover:bg-blue-700"
-        >
-          <BiPlus className="mr-2" />
-          Add Question
-        </button>
-        <button
-          type="submit"
-          className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
-        >
-          Save Quiz
-        </button>
-      </form>
+      )}
     </div>
   );
 }

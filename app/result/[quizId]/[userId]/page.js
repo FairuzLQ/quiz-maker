@@ -1,16 +1,15 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useParams } from 'next/navigation'; // Import useParams for dynamic routes
+import { useParams } from 'next/navigation';
 
 export default function ResultPage() {
   const router = useRouter();
-  const { quizId, userId } = useParams(); // Use useParams to access quizId and userId from the URL
+  const { quizId, userId } = useParams();
   const [result, setResult] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // Track loading state
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch result data when quizId and userId are available
   useEffect(() => {
     if (quizId && userId) {
       const fetchResult = async () => {
@@ -19,7 +18,7 @@ export default function ResultPage() {
           const data = await response.json();
 
           if (response.ok) {
-            setResult(data); // Set result data if fetch is successful
+            setResult(data);
           } else {
             console.error('Error fetching result:', data.error);
             alert('Failed to fetch result.');
@@ -28,32 +27,38 @@ export default function ResultPage() {
           console.error('Error fetching result:', error);
           alert('Error fetching result.');
         } finally {
-          setIsLoading(false); // Set loading to false after data is fetched
+          setIsLoading(false);
         }
       };
 
       fetchResult();
     }
-  }, [quizId, userId]); // Trigger effect when quizId and userId are available
+  }, [quizId, userId]);
 
-  // Show loading message if quizId or userId is not yet available
   if (isLoading || !quizId || !userId) {
-    return <div>Loading...</div>; // Wait for query params to be available
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-lg text-gray-600">Loading...</p>
+      </div>
+    );
   }
 
-  // Display result once it's fetched
   return (
-    <div className="min-h-screen flex bg-white">
-      <div className="flex-1 p-8">
-        <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Your Result</h1>
-          <div>
-            <p className="text-lg font-semibold">Quiz ID: {result.quiz_id}</p>
-            <p className="text-lg font-semibold">User ID: {result.user_id}</p>
-            <p className="text-xl font-bold mt-4">
-              Score: {result.score}%
-            </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+      <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-lg">
+        <h1 className="text-3xl font-extrabold text-blue-600 mb-4 text-center">Your Result</h1>
+        <div className="space-y-4">
+          <div className="p-4 bg-blue-100 rounded-lg text-center">
+            <p className="text-xl font-bold text-blue-600">Score: {result.score}%</p>
           </div>
+        </div>
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Back to Dashboard
+          </button>
         </div>
       </div>
     </div>

@@ -6,17 +6,16 @@ import { supabase } from '@lib/supabase';
 
 export default function QuizPage() {
   const router = useRouter();
-  const { quizId } = useParams(); // Use useParams to access quizId
+  const { quizId } = useParams();
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Fetch user session to ensure authentication
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error || !session) {
-        router.push('../auth/login'); // Redirect to login if not authenticated
+        router.push('../auth/login');
         alert('You must be logged in to take this quiz. Please log in.');
       } else {
         setIsAuthenticated(true);
@@ -26,7 +25,6 @@ export default function QuizPage() {
     checkSession();
   }, [router]);
 
-  // Fetch quiz data
   useEffect(() => {
     const fetchQuiz = async () => {
       if (quizId && isAuthenticated) {
@@ -34,12 +32,11 @@ export default function QuizPage() {
           .from('quizzes')
           .select('id, title, questions')
           .eq('id', quizId)
-          .single(); // Fetch quiz by ID
+          .single();
 
         if (error) {
           console.error(error.message);
         } else {
-          // Parse questions if they are stored as a JSON string
           const parsedQuestions = typeof quizData.questions === 'string'
             ? JSON.parse(quizData.questions)
             : quizData.questions;
@@ -62,14 +59,12 @@ export default function QuizPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if all questions have been answered
     const unansweredQuestions = quiz.questions.filter((_, index) => !answers[index]);
     if (unansweredQuestions.length > 0) {
       alert('Please answer all questions before submitting.');
       return;
     }
 
-    // Calculate the score
     let calculatedScore = 0;
     quiz.questions.forEach((question, index) => {
       if (answers[index] === question.answer) {
@@ -77,10 +72,8 @@ export default function QuizPage() {
       }
     });
 
-    const score = (calculatedScore / quiz.questions.length) * 100; // Calculate percentage
-    //console.log(`Calculated Score: ${score}%`); // Debugging log
+    const score = (calculatedScore / quiz.questions.length) * 100;
 
-    // Fetch user session to get the user ID
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
       alert('Failed to get user session');
@@ -89,7 +82,6 @@ export default function QuizPage() {
 
     const userId = session.user.id;
 
-    // Post the result to the API
     try {
       const response = await fetch('/api/quizzez/result', {
         method: 'POST',
@@ -103,7 +95,7 @@ export default function QuizPage() {
 
       if (response.ok) {
         alert('Your result has been saved successfully!');
-        router.push(`/result/${quizId}/${userId}`); // Redirect to dashboard after submission
+        router.push(`/result/${quizId}/${userId}`);
       } else {
         alert('Failed to submit your result.');
       }
@@ -114,26 +106,38 @@ export default function QuizPage() {
   };
 
   if (!isAuthenticated) {
-    return null; // Show nothing until session is checked
+    return null;
   }
 
   if (!quiz) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
-      <div className="flex-1 p-8">
-        <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">{quiz.title}</h1>
+    <div className="min-h-screen flex bg-gradient-to-b from-blue-50 to-white">
+      <div className="flex-1 p-6 sm:p-8">
+        <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+          <h1 className="text-3xl font-extrabold text-blue-600 mb-6">{quiz.title}</h1>
           <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {quiz.questions.map((question, index) => (
-                <div key={index}>
-                  <p className="text-lg font-semibold">{question.question}</p>
-                  <div className="mt-2">
+                <div key={index} className="p-4 bg-gray-50 rounded-lg shadow-sm">
+                  <p className="text-lg font-medium text-gray-800">{question.question}</p>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {question.options.map((option, optionIndex) => (
-                      <div key={optionIndex} className="flex items-center space-x-2">
+                      <label
+                        key={optionIndex}
+                        htmlFor={`question-${index}-option-${optionIndex}`}
+                        className={`flex items-center px-4 py-3 border rounded-lg cursor-pointer transition ${
+                          answers[index] === option
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-blue-400 hover:bg-blue-100'
+                        }`}
+                      >
                         <input
                           type="radio"
                           id={`question-${index}-option-${optionIndex}`}
@@ -141,15 +145,10 @@ export default function QuizPage() {
                           value={option}
                           onChange={() => handleAnswerChange(index, option)}
                           checked={answers[index] === option}
-                          className="h-4 w-4 text-blue-600"
+                          className="hidden"
                         />
-                        <label
-                          htmlFor={`question-${index}-option-${optionIndex}`}
-                          className="text-gray-700"
-                        >
-                          {option}
-                        </label>
-                      </div>
+                        <span className="text-gray-700">{option}</span>
+                      </label>
                     ))}
                   </div>
                 </div>
@@ -157,7 +156,7 @@ export default function QuizPage() {
             </div>
             <button
               type="submit"
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="mt-6 w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Submit Quiz
             </button>
