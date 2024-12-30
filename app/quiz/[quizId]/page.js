@@ -10,10 +10,27 @@ export default function QuizPage() {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Fetch user session to ensure authentication
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        router.push('../auth/login'); // Redirect to login if not authenticated
+        alert('You must be logged in to take this quiz. Please log in.');
+      } else {
+        setIsAuthenticated(true);
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
+  // Fetch quiz data
   useEffect(() => {
     const fetchQuiz = async () => {
-      if (quizId) {
+      if (quizId && isAuthenticated) {
         const { data: quizData, error } = await supabase
           .from('quizzes')
           .select('id, title, questions')
@@ -23,13 +40,18 @@ export default function QuizPage() {
         if (error) {
           console.error(error.message);
         } else {
-          setQuiz(quizData);
+          // Parse questions if they are stored as a JSON string
+          const parsedQuestions = typeof quizData.questions === 'string'
+            ? JSON.parse(quizData.questions)
+            : quizData.questions;
+
+          setQuiz({ ...quizData, questions: parsedQuestions });
         }
       }
     };
 
     fetchQuiz();
-  }, [quizId]);
+  }, [quizId, isAuthenticated]);
 
   const handleAnswerChange = (questionIndex, selectedOption) => {
     setAnswers({
@@ -50,6 +72,10 @@ export default function QuizPage() {
 
     setScore((calculatedScore / quiz.questions.length) * 100); // Calculate percentage
   };
+
+  if (!isAuthenticated) {
+    return null; // Show nothing until session is checked
+  }
 
   if (!quiz) {
     return <div>Loading...</div>;
@@ -77,7 +103,12 @@ export default function QuizPage() {
                           checked={answers[index] === option}
                           className="h-4 w-4 text-blue-600"
                         />
-                        <label htmlFor={`question-${index}-option-${optionIndex}`} className="text-gray-700">{option}</label>
+                        <label
+                          htmlFor={`question-${index}-option-${optionIndex}`}
+                          className="text-gray-700"
+                        >
+                          {option}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -94,7 +125,9 @@ export default function QuizPage() {
 
           {score !== null && (
             <div className="mt-6">
-              <h2 className="text-xl font-bold text-gray-800">Your Score: {score}%</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                Your Score: {score}%
+              </h2>
               <button
                 onClick={() => router.push('/dashboard')}
                 className="mt-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"

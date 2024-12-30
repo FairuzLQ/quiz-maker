@@ -28,12 +28,15 @@ export default function NewQuiz() {
     const quizPayload = {
       title: quizData.title,
       author: quizData.author,
-      questions: quizData.questions,
+      questions: quizData.questions.map((q) => ({
+        question: q.question,
+        options: q.options,
+        answer: q.options[q.correctAnswer],
+      })),
       user_id: session.user.id, // Include the user ID from the session
     };
 
     try {
-      // Send the quiz data to the API route
       const response = await fetch('/api/quizzez/create', {
         method: 'POST',
         headers: {
@@ -43,7 +46,6 @@ export default function NewQuiz() {
       });
 
       if (response.ok) {
-        // After saving, redirect to the dashboard
         router.push('/dashboard');
       } else {
         console.error('Failed to create quiz');
@@ -59,10 +61,10 @@ export default function NewQuiz() {
       questions: [
         ...quizData.questions,
         {
-          id: Date.now(), // Use a unique ID based on timestamp
+          id: Date.now(), // Unique ID based on timestamp
           question: '',
-          options: ['', '', '', ''],
-          correctAnswer: 0, // Default correct answer (index of options)
+          options: ['', '', '', ''], // Default options
+          correctAnswer: 0, // Default correct answer index
         },
       ],
     });
@@ -147,7 +149,6 @@ export default function NewQuiz() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
           {quizData.questions.map((question) => (
             <div key={question.id} className="mb-6 border p-4 rounded-lg shadow-sm">
-              {/* Question Text */}
               <div className="mb-4">
                 <label className="block text-lg font-medium text-gray-700">Question</label>
                 <input
@@ -161,7 +162,6 @@ export default function NewQuiz() {
                 />
               </div>
 
-              {/* Options */}
               {question.options.map((option, index) => (
                 <div key={index} className="mb-4">
                   <label className="block text-lg font-medium text-gray-700">
@@ -178,7 +178,6 @@ export default function NewQuiz() {
                 </div>
               ))}
 
-              {/* Correct Answer */}
               <div className="mb-4">
                 <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
                 <select
@@ -188,13 +187,12 @@ export default function NewQuiz() {
                 >
                   {question.options.map((option, index) => (
                     <option key={index} value={index}>
-                      {`Option ${index + 1}`}
+                      {option || `Option ${index + 1}`}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Remove Question */}
               <button
                 type="button"
                 onClick={() => handleRemoveQuestion(question.id)}
@@ -207,7 +205,6 @@ export default function NewQuiz() {
           ))}
         </div>
 
-        {/* Add Question Button */}
         <button
           type="button"
           onClick={handleAddQuestion}
@@ -217,7 +214,6 @@ export default function NewQuiz() {
           <span>Add Question</span>
         </button>
 
-        {/* Save Quiz Button */}
         <button
           type="submit"
           className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
