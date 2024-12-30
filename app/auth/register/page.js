@@ -104,7 +104,7 @@ export default function Register() {
 
           // Redirect to login after 3 seconds
           setTimeout(() => {
-            router.push('/login');
+            router.push('/auth/login');
           }, 3000);
         } else {
           setErrors((prevErrors) => ({
