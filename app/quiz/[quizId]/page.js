@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@lib/supabase';
+import { useLanguage } from 'context/LanguageContext'; // Import language context
 
 export default function QuizPage() {
   const router = useRouter();
@@ -10,20 +11,21 @@ export default function QuizPage() {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { t } = useLanguage(); // Get translations from the context
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error || !session) {
         router.push('../auth/login');
-        alert('You must be logged in to take this quiz. Please log in.');
+        alert(t.loginRequired || 'You must be logged in to take this quiz. Please log in.');
       } else {
         setIsAuthenticated(true);
       }
     };
 
     checkSession();
-  }, [router]);
+  }, [router, t]);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -61,7 +63,7 @@ export default function QuizPage() {
 
     const unansweredQuestions = quiz.questions.filter((_, index) => !answers[index]);
     if (unansweredQuestions.length > 0) {
-      alert('Please answer all questions before submitting.');
+      alert(t.answerAllQuestions || 'Please answer all questions before submitting.');
       return;
     }
 
@@ -76,7 +78,7 @@ export default function QuizPage() {
 
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
-      alert('Failed to get user session');
+      alert(t.sessionError || 'Failed to get user session');
       return;
     }
 
@@ -94,14 +96,14 @@ export default function QuizPage() {
       });
 
       if (response.ok) {
-        alert('Your result has been saved successfully!');
+        alert(t.resultSaved || 'Your result has been saved successfully!');
         router.push(`/result/${quizId}/${userId}`);
       } else {
-        alert('Failed to submit your result.');
+        alert(t.submitError || 'Failed to submit your result.');
       }
     } catch (err) {
       console.error('Error submitting result:', err);
-      alert('Error submitting result. Please try again later.');
+      alert(t.submitError || 'Error submitting result. Please try again later.');
     }
   };
 
@@ -112,7 +114,7 @@ export default function QuizPage() {
   if (!quiz) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-gray-600">{t.loading || 'Loading quiz...'}</div>
       </div>
     );
   }
@@ -158,7 +160,7 @@ export default function QuizPage() {
               type="submit"
               className="mt-6 w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              Submit Quiz
+              {t.submitQuiz || 'Submit Quiz'}
             </button>
           </form>
         </div>

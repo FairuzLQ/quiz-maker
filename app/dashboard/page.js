@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@lib/supabase';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faClock, faRightFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useLanguage } from 'context/LanguageContext';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { t } = useLanguage(); // Get translations
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState(null);
@@ -111,7 +113,7 @@ export default function Dashboard() {
   if (isAuthenticated === null) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
-        <p>Loading...</p>
+        <p>{t.loading || 'Loading...'}</p>
       </div>
     );
   }
@@ -121,23 +123,15 @@ export default function Dashboard() {
       {/* Sidebar */}
       <aside className="w-full lg:w-64 bg-blue-600 text-white flex-shrink-0">
         <div className="p-6">
-          <h1 className="text-2xl font-bold">Quiz-Maker</h1>
+          <h1 className="text-2xl font-bold">{t.appTitle || 'Quiz-Maker'}</h1>
         </div>
-        <nav className="mt-6 space-y-2 px-4">
-          <button className="flex items-center w-full py-2 hover:bg-blue-700 rounded-md px-3">
-            <FontAwesomeIcon icon={faUser} className="h-5 w-5 mr-3" />
-            Profile
-          </button>
-          <button className="flex items-center w-full py-2 hover:bg-blue-700 rounded-md px-3">
-            <FontAwesomeIcon icon={faClock} className="h-5 w-5 mr-3" />
-            Quiz History
-          </button>
+        <nav className="mt-6 mb-6 space-y-2 px-4">
           <button
             onClick={() => setShowLogoutModal(true)}
             className="flex items-center w-full py-2 hover:bg-blue-700 rounded-md px-3"
           >
             <FontAwesomeIcon icon={faRightFromBracket} className="h-5 w-5 mr-3" />
-            Logout
+            {t.logout || 'Logout'}
           </button>
         </nav>
       </aside>
@@ -146,23 +140,23 @@ export default function Dashboard() {
       <main className="flex-1 p-6 bg-gray-50">
         <div className="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">My Quizzes</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{t.myQuizzes || 'My Quizzes'}</h1>
             <button
               onClick={handleAddQuiz}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              + Add New Quiz
+              + {t.addNewQuiz || 'Add New Quiz'}
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto border-collapse">
               <thead>
                 <tr className="bg-gray-200">
-                  <th className="px-4 py-2 border">Title</th>
-                  <th className="px-4 py-2 border">Date</th>
-                  <th className="px-4 py-2 border">Takers</th>
-                  <th className="px-4 py-2 border">Avg Score</th>
-                  <th className="px-4 py-2 border">Actions</th>
+                  <th className="px-4 py-2 border">{t.title || 'Title'}</th>
+                  <th className="px-4 py-2 border">{t.date || 'Date'}</th>
+                  <th className="px-4 py-2 border">{t.takers || 'Takers'}</th>
+                  <th className="px-4 py-2 border">{t.avgScore || 'Avg Score'}</th>
+                  <th className="px-4 py-2 border">{t.actions || 'Actions'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -193,7 +187,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="px-4 py-2 text-center">No quizzes available</td>
+                    <td colSpan="5" className="px-4 py-2 text-center">{t.noQuizzes || 'No quizzes available'}</td>
                   </tr>
                 )}
               </tbody>
@@ -206,20 +200,20 @@ export default function Dashboard() {
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm text-center">
-            <h2 className="text-lg font-bold mb-4">Log Out Confirmation</h2>
-            <p className="mb-4">Are you sure you want to log out?</p>
+            <h2 className="text-lg font-bold mb-4">{t.logoutConfirmation || 'Log Out Confirmation'}</h2>
+            <p className="mb-4">{t.logoutPrompt || 'Are you sure you want to log out?'}</p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => setShowLogoutModal(false)}
                 className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
               >
-                Cancel
+                {t.cancel || 'Cancel'}
               </button>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
-                Log Out
+                {t.logout || 'Log Out'}
               </button>
             </div>
           </div>
@@ -230,20 +224,20 @@ export default function Dashboard() {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm text-center">
-            <h2 className="text-lg font-bold mb-4">Delete Quiz Confirmation</h2>
-            <p className="mb-4">Are you sure you want to delete this quiz?</p>
+            <h2 className="text-lg font-bold mb-4">{t.deleteQuizConfirmation || 'Delete Quiz Confirmation'}</h2>
+            <p className="mb-4">{t.deleteQuizPrompt || 'Are you sure you want to delete this quiz?'}</p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
               >
-                Cancel
+                {t.cancel || 'Cancel'}
               </button>
               <button
                 onClick={handleDeleteQuiz}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
-                Delete
+                {t.delete || 'Delete'}
               </button>
             </div>
           </div>

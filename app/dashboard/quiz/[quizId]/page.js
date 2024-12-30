@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@lib/supabase';
 import { FiTrash2 } from 'react-icons/fi';
 import { BiPlus } from 'react-icons/bi';
+import { useLanguage } from 'context/LanguageContext'; // Import the language context
 
 export default function EditQuiz() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function EditQuiz() {
   const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { t } = useLanguage(); // Use the language context
 
   useEffect(() => {
     if (!quizId) return;
@@ -48,7 +50,7 @@ export default function EditQuiz() {
     e.preventDefault();
 
     if (!quizData.title || !quizData.author || quizData.questions.some(q => !q.question || q.options.some(opt => !opt.trim()))) {
-      alert('Please fill out all fields.');
+      alert(t.fillAllFields || 'Please fill out all fields.');
       return;
     }
 
@@ -74,16 +76,16 @@ export default function EditQuiz() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to update quiz.');
+        alert(errorData.error || t.updateFailed || 'Failed to update quiz.');
         setIsSaving(false);
         return;
       }
 
-      alert('Quiz updated successfully!');
+      alert(t.quizUpdated || 'Quiz updated successfully!');
       router.push('/dashboard');
     } catch (error) {
       console.error('Error saving quiz:', error);
-      alert('An error occurred while saving. Please try again.');
+      alert(t.saveError || 'An error occurred while saving. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -141,7 +143,7 @@ export default function EditQuiz() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Loading quiz...</p>
+        <p>{t.loadingQuiz || 'Loading quiz...'}</p>
       </div>
     );
   }
@@ -149,7 +151,7 @@ export default function EditQuiz() {
   if (!quizData) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Quiz not found.</p>
+        <p>{t.quizNotFound || 'Quiz not found.'}</p>
       </div>
     );
   }
@@ -157,10 +159,10 @@ export default function EditQuiz() {
   return (
     <div className="relative">
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Edit Quiz</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">{t.editQuiz || 'Edit Quiz'}</h1>
         <form onSubmit={handleSave}>
           <div className="mb-4">
-            <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
+            <label className="block text-lg font-medium text-gray-700">{t.quizTitle || 'Quiz Title'}</label>
             <input
               type="text"
               value={quizData.title}
@@ -169,7 +171,7 @@ export default function EditQuiz() {
             />
           </div>
           <div className="mb-6">
-            <label className="block text-lg font-medium text-gray-700">Author Name</label>
+            <label className="block text-lg font-medium text-gray-700">{t.authorName || 'Author Name'}</label>
             <input
               type="text"
               value={quizData.author}
@@ -178,11 +180,11 @@ export default function EditQuiz() {
             />
           </div>
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">{t.questions || 'Questions'}</h2>
             {quizData.questions.map((question, index) => (
               <div key={question.id || index} className="mb-6 border p-4 rounded-lg shadow-sm">
                 <div className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">Question</label>
+                  <label className="block text-lg font-medium text-gray-700">{t.question || 'Question'}</label>
                   <input
                     type="text"
                     value={question.question}
@@ -192,7 +194,7 @@ export default function EditQuiz() {
                 </div>
                 {question.options.map((option, idx) => (
                   <div key={idx} className="mb-4">
-                    <label className="block text-lg font-medium text-gray-700">Option {idx + 1}</label>
+                    <label className="block text-lg font-medium text-gray-700">{t.option} {idx + 1}</label>
                     <input
                       type="text"
                       value={option}
@@ -202,7 +204,7 @@ export default function EditQuiz() {
                   </div>
                 ))}
                 <div className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
+                  <label className="block text-lg font-medium text-gray-700">{t.correctAnswer || 'Correct Answer'}</label>
                   <select
                     value={question.correctAnswer ?? 0}
                     onChange={(e) => handleCorrectAnswerChange(e, index)}
@@ -221,7 +223,7 @@ export default function EditQuiz() {
                   className="text-red-500 hover:text-red-700 flex items-center"
                 >
                   <FiTrash2 className="mr-2" />
-                  Remove Question
+                  {t.removeQuestion || 'Remove Question'}
                 </button>
               </div>
             ))}
@@ -232,13 +234,13 @@ export default function EditQuiz() {
             className="bg-blue-500 text-white p-3 rounded-lg mb-4 flex items-center hover:bg-blue-700"
           >
             <BiPlus className="mr-2" />
-            Add Question
+            {t.addQuestion || 'Add Question'}
           </button>
           <button
             type="submit"
             className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
           >
-            Save Quiz
+            {t.saveQuiz || 'Save Quiz'}
           </button>
         </form>
       </div>
@@ -246,7 +248,7 @@ export default function EditQuiz() {
       {isSaving && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
-            <p className="text-lg font-semibold text-gray-800">Saving your quiz...</p>
+            <p className="text-lg font-semibold text-gray-800">{t.savingQuiz || 'Saving your quiz...'}</p>
           </div>
         </div>
       )}

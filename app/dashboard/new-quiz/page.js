@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FiTrash2 } from 'react-icons/fi'; // Icon for deleting questions
 import { BiPlus } from 'react-icons/bi'; // Icon for adding a question
 import { supabase } from '@lib/supabase'; // Import Supabase client
+import { useLanguage } from 'context/LanguageContext'; // Import the language context
 
 export default function NewQuiz() {
   const [quizData, setQuizData] = useState({
@@ -15,6 +16,7 @@ export default function NewQuiz() {
   const [isSaving, setIsSaving] = useState(false); // State for managing the modal visibility
 
   const router = useRouter();
+  const { t } = useLanguage(); // Use language context to get translations
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -122,44 +124,44 @@ export default function NewQuiz() {
     <div className="relative">
       {/* Main Form */}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Create New Quiz</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">{t.createNewQuiz || 'Create New Quiz'}</h1>
         <form onSubmit={handleSave}>
           <div className="mb-4">
-            <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
+            <label className="block text-lg font-medium text-gray-700">{t.quizTitle || 'Quiz Title'}</label>
             <input
               type="text"
               value={quizData.title}
               onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
-              placeholder="Enter quiz title"
+              placeholder={t.enterQuizTitle || 'Enter quiz title'}
               className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-lg font-medium text-gray-700">Author Name</label>
+            <label className="block text-lg font-medium text-gray-700">{t.authorName || 'Author Name'}</label>
             <input
               type="text"
               value={quizData.author}
               onChange={(e) => setQuizData({ ...quizData, author: e.target.value })}
-              placeholder="Enter author name"
+              placeholder={t.enterAuthorName || 'Enter author name'}
               className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">{t.questions || 'Questions'}</h2>
             {quizData.questions.map((question) => (
               <div key={question.id} className="mb-6 border p-4 rounded-lg shadow-sm">
                 <div className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">Question</label>
+                  <label className="block text-lg font-medium text-gray-700">{t.question || 'Question'}</label>
                   <input
                     type="text"
                     name="question"
                     value={question.question}
                     onChange={(e) => handleChangeQuestion(e, question.id)}
-                    placeholder="Enter the question"
+                    placeholder={t.enterQuestion || 'Enter the question'}
                     className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                   />
@@ -168,13 +170,13 @@ export default function NewQuiz() {
                 {question.options.map((option, index) => (
                   <div key={index} className="mb-4">
                     <label className="block text-lg font-medium text-gray-700">
-                      Option {index + 1}
+                      {t.option} {index + 1}
                     </label>
                     <input
                       type="text"
                       value={option}
                       onChange={(e) => handleChangeOption(e, question.id, index)}
-                      placeholder={`Option ${index + 1}`}
+                      placeholder={`${t.option} ${index + 1}`}
                       className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       required
                     />
@@ -182,7 +184,7 @@ export default function NewQuiz() {
                 ))}
 
                 <div className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
+                  <label className="block text-lg font-medium text-gray-700">{t.correctAnswer || 'Correct Answer'}</label>
                   <select
                     value={question.correctAnswer}
                     onChange={(e) => handleCorrectAnswerChange(e, question.id)}
@@ -190,7 +192,7 @@ export default function NewQuiz() {
                   >
                     {question.options.map((option, index) => (
                       <option key={index} value={index}>
-                        {option || `Option ${index + 1}`}
+                        {option || `${t.option} ${index + 1}`}
                       </option>
                     ))}
                   </select>
@@ -202,7 +204,7 @@ export default function NewQuiz() {
                   className="text-red-500 hover:text-red-700 flex items-center space-x-2"
                 >
                   <FiTrash2 className="text-xl" />
-                  <span>Remove Question</span>
+                  <span>{t.removeQuestion || 'Remove Question'}</span>
                 </button>
               </div>
             ))}
@@ -214,14 +216,14 @@ export default function NewQuiz() {
             className="bg-blue-500 text-white p-3 rounded-lg mb-4 flex items-center space-x-2 hover:bg-blue-700"
           >
             <BiPlus className="text-xl" />
-            <span>Add Question</span>
+            <span>{t.addQuestion || 'Add Question'}</span>
           </button>
 
           <button
             type="submit"
             className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
           >
-            Save Quiz
+            {t.saveQuiz || 'Save Quiz'}
           </button>
         </form>
       </div>
@@ -230,7 +232,7 @@ export default function NewQuiz() {
       {isSaving && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
-            <p className="text-lg font-semibold text-gray-800">Saving your quiz...</p>
+            <p className="text-lg font-semibold text-gray-800">{t.savingQuiz || 'Saving your quiz...'}</p>
           </div>
         </div>
       )}

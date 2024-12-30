@@ -1,6 +1,6 @@
-// app/layout.js
 import Navbar from '../components/Navbar';
-import './globals.css'; // Global styles for Tailwind
+import { LanguageProvider } from '../context/LanguageContext';
+import './globals.css';
 
 export const metadata = {
   title: 'Quiz Maker',
@@ -11,11 +11,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-gray-50">
-        {/* Navbar is included here */}
-        <Navbar />
-        
-        {/* Page content */}
-        <main className="container mx-auto p-6">{children}</main>
+        <LanguageProvider>
+          <Navbar />
+          <main className="container mx-auto p-6">{children}</main>
+        </LanguageProvider>
       </body>
     </html>
   );

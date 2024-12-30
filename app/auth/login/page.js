@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@lib/supabase';
+import { useLanguage } from 'context/LanguageContext'; // Import language context
 
 export default function Login() {
+  const { t } = useLanguage(); // Use the global language context
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -54,7 +57,7 @@ export default function Login() {
     if (!formData.email.includes('@')) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        email: 'Please enter a valid email',
+        email: t.emailInvalid || 'Please enter a valid email',
       }));
       isValid = false;
     }
@@ -63,7 +66,7 @@ export default function Login() {
     if (formData.password.length < 8) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        password: 'Password must be at least 8 characters',
+        password: t.passwordTooShort || 'Password must be at least 8 characters',
       }));
       isValid = false;
     }
@@ -80,7 +83,7 @@ export default function Login() {
         if (error) {
           setErrors((prevErrors) => ({
             ...prevErrors,
-            email: error.message || 'Login failed',
+            email: error.message || t.loginFailed || 'Login failed',
           }));
         } else if (data.session) {
           // Show modal and redirect to dashboard
@@ -93,7 +96,7 @@ export default function Login() {
         console.error('Error during login:', error);
         setErrors((prevErrors) => ({
           ...prevErrors,
-          email: 'An error occurred. Please try again later.',
+          email: t.genericError || 'An error occurred. Please try again later.',
         }));
       } finally {
         setLoading(false);
@@ -106,13 +109,13 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div dir={t.currentLang === 'ar' ? 'rtl' : 'ltr'} className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-extrabold text-center text-blue-600 mb-6">Login</h2>
+        <h2 className="text-3xl font-extrabold text-center text-blue-600 mb-6">{t.login || 'Login'}</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
+              {t.email || 'Email'}
             </label>
             <input
               type="email"
@@ -120,13 +123,13 @@ export default function Login() {
               value={formData.email}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
+              placeholder={t.enterEmail || 'Enter your email'}
             />
             {errors.email && <p className="text-red-500 text-sm mt-2">{errors.email}</p>}
           </div>
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-              Password
+              {t.password || 'Password'}
             </label>
             <div className="relative">
               <input
@@ -135,14 +138,14 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your password"
+                placeholder={t.enterPassword || 'Enter your password'}
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className="absolute top-3 right-3 text-gray-600"
               >
-                {passwordVisible ? 'Hide' : 'Show'}
+                {passwordVisible ? t.hide || 'Hide' : t.show || 'Show'}
               </button>
             </div>
             {errors.password && <p className="text-red-500 text-sm mt-2">{errors.password}</p>}
@@ -152,14 +155,14 @@ export default function Login() {
             className="w-full py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? t.loggingIn || 'Logging in...' : t.login || 'Login'}
           </button>
         </form>
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            {t.noAccount || "Don't have an account?"}{' '}
             <Link href="./register" className="text-blue-600 hover:text-blue-700 font-semibold">
-              Register here
+              {t.registerHere || 'Register here'}
             </Link>
           </p>
         </div>
@@ -169,8 +172,8 @@ export default function Login() {
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm">
-            <h3 className="text-xl font-semibold text-center">Login Successful</h3>
-            <p className="text-center text-gray-600 mt-4">Redirecting to your dashboard...</p>
+            <h3 className="text-xl font-semibold text-center">{t.loginSuccess || 'Login Successful'}</h3>
+            <p className="text-center text-gray-600 mt-4">{t.redirectingDashboard || 'Redirecting to your dashboard...'}</p>
           </div>
         </div>
       )}
