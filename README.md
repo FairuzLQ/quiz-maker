@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Next.js Quiz App
 
-## Getting Started
+A Next.js application for creating and managing quizzes. Users can log in, create quizzes, take quizzes, and see their results.
 
-First, run the development server:
+## Technologies
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+This app is built using the following technologies:
+- **Next.js**: React framework for server-side rendering and static site generation.
+- **Supabase**: Backend-as-a-Service (BaaS) for authentication and database management.
+- **Tailwind CSS**: Utility-first CSS framework for styling.
+- **Font Awesome**: For icons.
+- **React Context API**: For managing language translations across the app.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup Instructions
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+1. **Clone the Repository**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   First, clone the repository to your local machine:
 
-## Learn More
+   ```bash
+   git clone https://github.com/fairuzlq/quiz-maker.git
 
-To learn more about Next.js, take a look at the following resources:
+2. **Clone the Repository**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   Navigate into the project directory and install the dependencies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   cd next-quiz-app
+   npm install
+   
+3. **Set Up Environment Variables**
+   Set up a .env.local file for Supabase and other environment variables.
 
-## Deploy on Vercel
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=supabase-url //ATTACHED ON EMAIL
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=supabase-anon-key //ATTACHED ON EMAIL
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Running the Application**
+   Once everything is set up, you can run the app locally:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   npm run dev
