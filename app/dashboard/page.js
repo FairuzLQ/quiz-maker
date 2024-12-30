@@ -72,7 +72,7 @@ export default function Dashboard() {
 
   // Navigate to the edit quiz page
   const handleEditQuiz = (quizId) => {
-    router.push(`/quiz/${quizId}`);
+    router.push(`/dashboard/quiz/${quizId}`);
   };
 
   // Handle logout functionality
