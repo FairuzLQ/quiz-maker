@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@lib/supabase';
-import { FiTrash2 } from 'react-icons/fi'; // Icon for deleting questions
-import { BiPlus } from 'react-icons/bi'; // Icon for adding a question
+import { FiTrash2 } from 'react-icons/fi';
+import { BiPlus } from 'react-icons/bi';
 
 export default function EditQuiz() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function EditQuiz() {
 
       const { data, error } = await supabase
         .from('quizzes')
-        .select('*')
+        .select('id, title, author, questions')
         .eq('id', quizId)
         .single();
 
@@ -30,12 +30,11 @@ export default function EditQuiz() {
         return;
       }
 
-      const parsedQuizData = {
-        ...data,
-        questions: data.questions || [],
-      };
+      const parsedQuestions = typeof data.questions === 'string'
+        ? JSON.parse(data.questions)
+        : data.questions;
 
-      setQuizData(parsedQuizData);
+      setQuizData({ ...data, questions: parsedQuestions });
       setLoading(false);
     };
 
@@ -45,31 +44,40 @@ export default function EditQuiz() {
   const handleSave = async (e) => {
     e.preventDefault();
 
+    if (!quizData.title || !quizData.author || quizData.questions.some(q => !q.question || q.options.some(opt => !opt.trim()))) {
+      alert('Please fill out all fields.');
+      return;
+    }
+
+    const formattedQuestions = quizData.questions.map((q) => ({
+      question: q.question,
+      options: q.options,
+      answer: q.options[q.correctAnswer] || '',
+    }));
+
     try {
       const response = await fetch('/api/quizzez/edit', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           quizId,
           title: quizData.title,
           author: quizData.author,
-          questions: quizData.questions,
+          questions: formattedQuestions,
         }),
       });
 
       if (!response.ok) {
-        console.error('Failed to update quiz');
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to update quiz.');
         return;
       }
 
-      const data = await response.json();
-      console.log('Quiz updated successfully:', data);
-
+      alert('Quiz updated successfully!');
       router.push('/dashboard');
     } catch (error) {
-      console.error('Error updating quiz:', error);
+      console.error('Error saving quiz:', error);
+      alert('An error occurred while saving. Please try again.');
     }
   };
 
@@ -81,8 +89,8 @@ export default function EditQuiz() {
         {
           id: Date.now(),
           question: '',
-          options: ['', '', '', ''], // Default options
-          correctAnswer: 0, // Default correct answer index
+          options: ['', '', '', ''],
+          correctAnswer: 0,
         },
       ],
     }));
@@ -91,45 +99,35 @@ export default function EditQuiz() {
   const handleRemoveQuestion = (questionId) => {
     setQuizData((prevData) => ({
       ...prevData,
-      questions: prevData.questions.filter((q) => q.id !== questionId),
+      questions: prevData.questions.filter((q, idx) => q.id !== questionId && idx !== questionId),
     }));
   };
 
-  const handleChangeQuestion = (e, questionId) => {
-    const { name, value } = e.target;
-    setQuizData((prevData) => ({
-      ...prevData,
-      questions: prevData.questions.map((q) =>
-        q.id === questionId ? { ...q, [name]: value } : q
-      ),
-    }));
-  };
-
-  const handleChangeOption = (e, questionId, optionIndex) => {
+  const handleChangeQuestion = (e, questionIndex) => {
     const { value } = e.target;
-    setQuizData((prevData) => ({
-      ...prevData,
-      questions: prevData.questions.map((q) =>
-        q.id === questionId
-          ? {
-              ...q,
-              options: q.options.map((opt, index) =>
-                index === optionIndex ? value : opt
-              ),
-            }
-          : q
-      ),
-    }));
+    setQuizData((prevData) => {
+      const updatedQuestions = [...prevData.questions];
+      updatedQuestions[questionIndex].question = value;
+      return { ...prevData, questions: updatedQuestions };
+    });
   };
 
-  const handleCorrectAnswerChange = (e, questionId) => {
+  const handleChangeOption = (e, questionIndex, optionIndex) => {
     const { value } = e.target;
-    setQuizData((prevData) => ({
-      ...prevData,
-      questions: prevData.questions.map((q) =>
-        q.id === questionId ? { ...q, correctAnswer: parseInt(value) } : q
-      ),
-    }));
+    setQuizData((prevData) => {
+      const updatedQuestions = [...prevData.questions];
+      updatedQuestions[questionIndex].options[optionIndex] = value;
+      return { ...prevData, questions: updatedQuestions };
+    });
+  };
+
+  const handleCorrectAnswerChange = (e, questionIndex) => {
+    const { value } = e.target;
+    setQuizData((prevData) => {
+      const updatedQuestions = [...prevData.questions];
+      updatedQuestions[questionIndex].correctAnswer = parseInt(value);
+      return { ...prevData, questions: updatedQuestions };
+    });
   };
 
   if (loading) {
@@ -152,7 +150,6 @@ export default function EditQuiz() {
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Edit Quiz</h1>
       <form onSubmit={handleSave}>
-        {/* Quiz Title */}
         <div className="mb-4">
           <label className="block text-lg font-medium text-gray-700">Quiz Title</label>
           <input
@@ -162,8 +159,6 @@ export default function EditQuiz() {
             className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
-
-        {/* Author Name */}
         <div className="mb-6">
           <label className="block text-lg font-medium text-gray-700">Author Name</label>
           <input
@@ -173,8 +168,6 @@ export default function EditQuiz() {
             className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
-
-        {/* Questions Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
           {quizData.questions.map((question, index) => (
@@ -183,43 +176,36 @@ export default function EditQuiz() {
                 <label className="block text-lg font-medium text-gray-700">Question</label>
                 <input
                   type="text"
-                  name="question"
                   value={question.question}
-                  onChange={(e) => handleChangeQuestion(e, question.id || index)}
+                  onChange={(e) => handleChangeQuestion(e, index)}
                   className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
-                  required
                 />
               </div>
-
-              {question.options.map((option, optionIndex) => (
-                <div key={optionIndex} className="mb-4">
-                  <label className="block text-lg font-medium text-gray-700">
-                    Option {optionIndex + 1}
-                  </label>
+              {question.options.map((option, idx) => (
+                <div key={idx} className="mb-4">
+                  <label className="block text-lg font-medium text-gray-700">Option {idx + 1}</label>
                   <input
                     type="text"
                     value={option}
-                    onChange={(e) => handleChangeOption(e, question.id || index, optionIndex)}
+                    onChange={(e) => handleChangeOption(e, index, idx)}
                     className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
                   />
                 </div>
               ))}
-
               <div className="mb-4">
                 <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
                 <select
-                  value={question.correctAnswer}
-                  onChange={(e) => handleCorrectAnswerChange(e, question.id || index)}
+                  value={question.correctAnswer ?? 0}
+                  onChange={(e) => handleCorrectAnswerChange(e, index)}
                   className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
                 >
-                  {question.options.map((option, index) => (
-                    <option key={index} value={index}>
-                      {option || `Option ${index + 1}`}
+                  {question.options.map((option, idx) => (
+                    <option key={idx} value={idx}>
+                      {option}
                     </option>
                   ))}
                 </select>
               </div>
-
               <button
                 type="button"
                 onClick={() => handleRemoveQuestion(question.id || index)}
@@ -231,7 +217,6 @@ export default function EditQuiz() {
             </div>
           ))}
         </div>
-
         <button
           type="button"
           onClick={handleAddQuestion}
@@ -240,7 +225,6 @@ export default function EditQuiz() {
           <BiPlus className="mr-2" />
           Add Question
         </button>
-
         <button
           type="submit"
           className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"
