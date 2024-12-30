@@ -103,7 +103,7 @@ export default function QuizPage() {
 
       if (response.ok) {
         alert('Your result has been saved successfully!');
-        router.push('/dashboard'); // Redirect to dashboard after submission
+        router.push(`/result/${quizId}/${userId}`); // Redirect to dashboard after submission
       } else {
         alert('Failed to submit your result.');
       }
