@@ -11,7 +11,7 @@ export default function EditQuiz() {
   const { quizId } = useParams();
   const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // State for managing the modal visibility
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!quizId) return;
@@ -31,9 +31,11 @@ export default function EditQuiz() {
         return;
       }
 
-      const parsedQuestions = typeof data.questions === 'string'
-        ? JSON.parse(data.questions)
-        : data.questions;
+      // Parse questions and determine correctAnswer index
+      const parsedQuestions = (typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions).map((q) => ({
+        ...q,
+        correctAnswer: q.options.indexOf(q.answer), // Determine the correct answer index
+      }));
 
       setQuizData({ ...data, questions: parsedQuestions });
       setLoading(false);
@@ -50,7 +52,7 @@ export default function EditQuiz() {
       return;
     }
 
-    setIsSaving(true); // Show modal
+    setIsSaving(true);
 
     const formattedQuestions = quizData.questions.map((q) => ({
       question: q.question,
@@ -73,7 +75,7 @@ export default function EditQuiz() {
       if (!response.ok) {
         const errorData = await response.json();
         alert(errorData.error || 'Failed to update quiz.');
-        setIsSaving(false); // Hide modal on error
+        setIsSaving(false);
         return;
       }
 
@@ -83,7 +85,7 @@ export default function EditQuiz() {
       console.error('Error saving quiz:', error);
       alert('An error occurred while saving. Please try again.');
     } finally {
-      setIsSaving(false); // Hide modal
+      setIsSaving(false);
     }
   };
 
@@ -241,7 +243,6 @@ export default function EditQuiz() {
         </form>
       </div>
 
-      {/* Modal */}
       {isSaving && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
