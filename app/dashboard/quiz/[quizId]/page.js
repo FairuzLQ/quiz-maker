@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@lib/supabase';
-import { FiTrash2 } from 'react-icons/fi'; // Icon for deleting questions
-import { BiPlus } from 'react-icons/bi'; // Icon for adding a question
+import { FiTrash2 } from 'react-icons/fi';
+import { BiPlus } from 'react-icons/bi';
 
 export default function EditQuiz() {
   const router = useRouter();
-  const { quizId } = useParams(); // Access the dynamic route parameter
+  const { quizId } = useParams();
   const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +32,7 @@ export default function EditQuiz() {
 
       const parsedQuizData = {
         ...data,
-        questions: typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions,
+        questions: data.questions || [],
       };
 
       setQuizData(parsedQuizData);
@@ -45,30 +45,31 @@ export default function EditQuiz() {
   const handleSave = async (e) => {
     e.preventDefault();
 
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session || !session.user) {
-      console.error('User not authenticated or session error');
-      return;
-    }
-
     try {
-      const { data, error } = await supabase
-        .from('quizzes')
-        .update({
+      const response = await fetch('/api/quizzez/edit', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quizId,
           title: quizData.title,
           author: quizData.author,
           questions: quizData.questions,
-        })
-        .eq('id', quizId);
+        }),
+      });
 
-      if (error) {
-        console.error('Error updating quiz:', error.message);
+      if (!response.ok) {
+        console.error('Failed to update quiz');
         return;
       }
 
-      router.push('/dashboard'); // Redirect to the dashboard after saving
-    } catch (err) {
-      console.error('Unexpected error saving quiz:', err.message);
+      const data = await response.json();
+      console.log('Quiz updated successfully:', data);
+
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error updating quiz:', error);
     }
   };
 
@@ -81,7 +82,7 @@ export default function EditQuiz() {
           id: Date.now(),
           question: '',
           options: ['', '', '', ''], // Default options
-          correctAnswer: 0, // Default correct answer index
+          answer: '', // Default correct answer
         },
       ],
     }));
@@ -121,12 +122,12 @@ export default function EditQuiz() {
     }));
   };
 
-  const handleCorrectAnswerChange = (e, questionId) => {
+  const handleAnswerChange = (e, questionId) => {
     const { value } = e.target;
     setQuizData((prevData) => ({
       ...prevData,
       questions: prevData.questions.map((q) =>
-        q.id === questionId ? { ...q, correctAnswer: parseInt(value) } : q
+        q.id === questionId ? { ...q, answer: value } : q
       ),
     }));
   };
@@ -176,29 +177,29 @@ export default function EditQuiz() {
         {/* Questions Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Questions</h2>
-          {quizData.questions.map((question) => (
-            <div key={question.id} className="mb-6 border p-4 rounded-lg shadow-sm">
+          {quizData.questions.map((question, index) => (
+            <div key={question.id || index} className="mb-6 border p-4 rounded-lg shadow-sm">
               <div className="mb-4">
                 <label className="block text-lg font-medium text-gray-700">Question</label>
                 <input
                   type="text"
                   name="question"
                   value={question.question}
-                  onChange={(e) => handleChangeQuestion(e, question.id)}
+                  onChange={(e) => handleChangeQuestion(e, question.id || index)}
                   className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
                   required
                 />
               </div>
 
-              {question.options.map((option, index) => (
-                <div key={index} className="mb-4">
+              {question.options.map((option, optionIndex) => (
+                <div key={optionIndex} className="mb-4">
                   <label className="block text-lg font-medium text-gray-700">
-                    Option {index + 1}
+                    Option {optionIndex + 1}
                   </label>
                   <input
                     type="text"
                     value={option}
-                    onChange={(e) => handleChangeOption(e, question.id, index)}
+                    onChange={(e) => handleChangeOption(e, question.id || index, optionIndex)}
                     className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
                   />
                 </div>
@@ -206,22 +207,17 @@ export default function EditQuiz() {
 
               <div className="mb-4">
                 <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
-                <select
-                  value={question.correctAnswer}
-                  onChange={(e) => handleCorrectAnswerChange(e, question.id)}
+                <input
+                  type="text"
+                  value={question.answer}
+                  onChange={(e) => handleAnswerChange(e, question.id || index)}
                   className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
-                >
-                  {question.options.map((option, index) => (
-                    <option key={index} value={index}>
-                      {option || `Option ${index + 1}`}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <button
                 type="button"
-                onClick={() => handleRemoveQuestion(question.id)}
+                onClick={() => handleRemoveQuestion(question.id || index)}
                 className="text-red-500 hover:text-red-700 flex items-center"
               >
                 <FiTrash2 className="mr-2" />
