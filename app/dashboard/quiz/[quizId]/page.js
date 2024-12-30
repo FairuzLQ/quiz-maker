@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@lib/supabase';
-import { FiTrash2 } from 'react-icons/fi';
-import { BiPlus } from 'react-icons/bi';
+import { FiTrash2 } from 'react-icons/fi'; // Icon for deleting questions
+import { BiPlus } from 'react-icons/bi'; // Icon for adding a question
 
 export default function EditQuiz() {
   const router = useRouter();
@@ -82,7 +82,7 @@ export default function EditQuiz() {
           id: Date.now(),
           question: '',
           options: ['', '', '', ''], // Default options
-          answer: '', // Default correct answer
+          correctAnswer: 0, // Default correct answer index
         },
       ],
     }));
@@ -122,12 +122,12 @@ export default function EditQuiz() {
     }));
   };
 
-  const handleAnswerChange = (e, questionId) => {
+  const handleCorrectAnswerChange = (e, questionId) => {
     const { value } = e.target;
     setQuizData((prevData) => ({
       ...prevData,
       questions: prevData.questions.map((q) =>
-        q.id === questionId ? { ...q, answer: value } : q
+        q.id === questionId ? { ...q, correctAnswer: parseInt(value) } : q
       ),
     }));
   };
@@ -207,12 +207,17 @@ export default function EditQuiz() {
 
               <div className="mb-4">
                 <label className="block text-lg font-medium text-gray-700">Correct Answer</label>
-                <input
-                  type="text"
-                  value={question.answer}
-                  onChange={(e) => handleAnswerChange(e, question.id || index)}
+                <select
+                  value={question.correctAnswer}
+                  onChange={(e) => handleCorrectAnswerChange(e, question.id || index)}
                   className="w-full p-3 mt-2 border border-gray-300 rounded-lg"
-                />
+                >
+                  {question.options.map((option, index) => (
+                    <option key={index} value={index}>
+                      {option || `Option ${index + 1}`}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <button
