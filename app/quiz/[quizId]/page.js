@@ -9,7 +9,6 @@ export default function QuizPage() {
   const { quizId } = useParams(); // Use useParams to access quizId
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
-  const [score, setScore] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Fetch user session to ensure authentication
@@ -60,17 +59,58 @@ export default function QuizPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let calculatedScore = 0;
 
+    // Check if all questions have been answered
+    const unansweredQuestions = quiz.questions.filter((_, index) => !answers[index]);
+    if (unansweredQuestions.length > 0) {
+      alert('Please answer all questions before submitting.');
+      return;
+    }
+
+    // Calculate the score
+    let calculatedScore = 0;
     quiz.questions.forEach((question, index) => {
       if (answers[index] === question.answer) {
         calculatedScore += 1;
       }
     });
 
-    setScore((calculatedScore / quiz.questions.length) * 100); // Calculate percentage
+    const score = (calculatedScore / quiz.questions.length) * 100; // Calculate percentage
+    //console.log(`Calculated Score: ${score}%`); // Debugging log
+
+    // Fetch user session to get the user ID
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+      alert('Failed to get user session');
+      return;
+    }
+
+    const userId = session.user.id;
+
+    // Post the result to the API
+    try {
+      const response = await fetch('/api/quizzez/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quizId,
+          userId,
+          score,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Your result has been saved successfully!');
+        router.push('/dashboard'); // Redirect to dashboard after submission
+      } else {
+        alert('Failed to submit your result.');
+      }
+    } catch (err) {
+      console.error('Error submitting result:', err);
+      alert('Error submitting result. Please try again later.');
+    }
   };
 
   if (!isAuthenticated) {
@@ -122,20 +162,6 @@ export default function QuizPage() {
               Submit Quiz
             </button>
           </form>
-
-          {score !== null && (
-            <div className="mt-6">
-              <h2 className="text-xl font-bold text-gray-800">
-                Your Score: {score}%
-              </h2>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="mt-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-              >
-                Go Back to Dashboard
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
